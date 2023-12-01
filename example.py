@@ -48,7 +48,8 @@ class App():
             if model2:model2="cnn"
             else:model2="hog"
             print(model1,model2,numjitters,tolerancecomp)
-            known_image = face_recognition.load_image_file("me.jpg") 
+            filelocation = tkinter.filedialog.askopenfilename()
+            known_image = face_recognition.load_image_file(filelocation) 
             filelocation = tkinter.filedialog.askopenfilename()
             unknown_image = face_recognition.load_image_file(filelocation)
             me = face_recognition.face_encodings(known_image,model=model1,num_jitters=numjitters)[0] 
@@ -58,7 +59,7 @@ class App():
             distance=face_recognition.api.face_distance([me], unknown_encoding) 
             t_process_ms=1000*(time.process_time()-t_start)       
             if result[0]:
-                answer="George"
+                answer="Known"
             else:
                 answer="Unknown"
             self.result.configure(text=f"{answer} in {t_process_ms:.2f} ms with distance {distance[0]:.2f}")        

@@ -142,7 +142,7 @@ class App():
         elif(time1>time2):comptext+=f"The second process was faster by {time1-time2} ms ."
         else:comptext+=f"The first process was faster by {time2-time1} ms ."
         if(abs(distance1-distance2)<0.01):comptext+=f"Both processes found about the same distance"
-        elif(distance2>distance1):comptext+=f"The first process found a smaller distance by {distance2-distance1} "
+        elif(distance2>distance1):comptext+=f"The first process found a smaller distance by {distance2[0]-distance1[0]} "
         else:comptext+=f"The second process  process found a smaller distance by {distance1[0]-distance2[0]}"
         self.comparison.configure(text=comptext)
 

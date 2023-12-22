@@ -74,17 +74,20 @@ class App():
             if model_type:model_type="cnn"
             else:model_type="hog"
             t_start=time.process_time()
+            
 
             first_image = face_recognition.load_image_file(filelocation1) 
             second_image = face_recognition.load_image_file(filelocation2)
 
-            first_encoding = face_recognition.face_encodings(first_image,model=encoding_size,num_jitters=numjitters)[0] 
-            second_encoding = face_recognition.face_encodings(second_image,model=encoding_size,num_jitters=numjitters)[0] 
+            face_locations1=face_recognition.face_locations(first_image,model=model_type) 
+            face_locations2=face_recognition.face_locations(second_image,model=model_type)
+
+            first_encoding = face_recognition.face_encodings(first_image,model=encoding_size,known_face_locations=face_locations1,num_jitters=numjitters)[0] 
+            second_encoding = face_recognition.face_encodings(second_image,model=encoding_size,known_face_locations=face_locations2,num_jitters=numjitters)[0] 
 
             result=face_recognition.compare_faces([first_encoding], second_encoding,tolerance=tolerance) 
             distance=face_recognition.api.face_distance([first_encoding], second_encoding) 
-            face_locations1=face_recognition.face_locations(first_image,model=model_type) 
-            face_locations2=face_recognition.face_locations(second_image,model=model_type)
+           
             t_process_ms=1000*(time.process_time()-t_start)       
             if result[0]:
                 answer="Recognized"

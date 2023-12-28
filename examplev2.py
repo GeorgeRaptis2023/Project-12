@@ -1,6 +1,7 @@
-import face_recognition,tkinter,tkinter.filedialog,time   
+import face_recognition,tkinter,tkinter.filedialog,time,cv2,os,os.path
+from sklearn import neighbors
+from face_recognition.face_recognition_cli import image_files_in_folder
 from PIL import Image,ImageTk
-import cv2
 class App():
     def __init__(self, root):
         self.root=root
@@ -113,7 +114,22 @@ class App():
             pil_image2 = Image.fromarray(face_image2)
             pil_image2=pil_image2.resize((75,75))    
             return ImageTk.PhotoImage(pil_image),ImageTk.PhotoImage(pil_image2),t_process_ms,distance
-      
+    
+    def find_knn(self,train_dir ,img_predict_path,distance_threshold=0.6 ,n_neighbors=1, knn_algo='ball_tree'):
+        X,y = [],[]
+        for class_dir in os.listdir(train_dir):
+            folderlocation=os.path.join(train_dir, class_dir)
+            if not os.path.isdir(folderlocation):continue
+            for img_path in image_files_in_folder(folderlocation):
+                image = face_recognition.load_image_file(img_path)
+                X.append(face_recognition.face_encodings(image)[0])
+                y.append(class_dir)
+        knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')
+        knn_clf.fit(X, y)
+        faces_encodings = face_recognition.face_encodings(face_recognition.load_image_file(img_predict_path))
+        if(knn_clf.kneighbors(faces_encodings, n_neighbors)[0][0][0] <= distance_threshold):return knn_clf.predict(faces_encodings)[0]
+        else:return 'Failed'
+
     def compare(self):
         try:
             filelocation1 = tkinter.filedialog.askopenfilename()
@@ -147,6 +163,14 @@ class App():
         except:
             print('Failed')
             return
+        
+        try:
+
+            filelocation = tkinter.filedialog.askopenfilename()
+            result_knn=self.find_knn('train',filelocation)
+        except:
+            print('Failed')
+            return            
         comptext=""
         if(abs(time1-time2)<0.01):comptext+=f"Both processes took about the same time ."
         elif(time1>time2):comptext+=f"The second process was faster by {time1-time2} ms ."
@@ -154,6 +178,8 @@ class App():
         if(abs(distance1-distance2)<0.01):comptext+=f"Both processes found about the same distance"
         elif(distance2>distance1):comptext+=f"The first process found a smaller distance by {distance2[0]-distance1[0]} "
         else:comptext+=f"The second process  process found a smaller distance by {distance1[0]-distance2[0]}"
+        if(result_knn=="Failed"):comptext+='Also K-neighbour failed.'
+        else:comptext+=f'.Also K-neighbour recognized the face as {result_knn}.'
         self.comparison.configure(text=comptext)
 
          

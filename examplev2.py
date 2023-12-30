@@ -6,7 +6,7 @@ class App():
     def __init__(self, root):
         self.root=root
         self.root.title("Ai Image Recognition")
-        root.geometry("750x500")
+        root.geometry("800x600")
 
         self.frame=tkinter.Frame(root)
         self.frame.grid(row=0,column=0)
@@ -182,7 +182,7 @@ class App():
             return 
         try:
             
-            result_knn=self.find_knn('train',filelocation,n_neighbors=neighbors,)
+            result_knn=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
         except:
             
             self.comparison.configure(text='Knn Failed')
@@ -202,3 +202,4 @@ class App():
 root = tkinter.Tk()
 App(root)
 root.mainloop()
+

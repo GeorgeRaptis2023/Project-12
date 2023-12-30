@@ -6,7 +6,7 @@ class App():
     def __init__(self, root):
         self.root=root
         self.root.title("Ai Image Recognition")
-        root.geometry("500x500")
+        root.geometry("750x500")
 
         self.frame=tkinter.Frame(root)
         self.frame.grid(row=0,column=0)
@@ -22,8 +22,14 @@ class App():
         self.name_counter=1
         self.vid = cv2.VideoCapture(0)
 
+        self.distance_threshold = tkinter.Scale(self.frame,from_=1, to=100, tickinterval=5, orient="horizontal")
+        self.distance_threshold.grid(row=12,column=0)
+
+        self.neighbors = tkinter.Scale(self.frame,from_=1, to=4, tickinterval=5,orient="horizontal")
+        self.neighbors.grid(row=12,column=2)
+
         self.comparison=tkinter.Label(self.frame,text="")
-        self.comparison.grid(row=12,column=0,columnspan=8)
+        self.comparison.grid(row=13,column=0,columnspan=8)
 
         self.result1=tkinter.Label(self.frame,text="")
         self.result1.grid(row=3,column=0,columnspan=4)
@@ -139,13 +145,16 @@ class App():
             tolerance=self.tolerance1.get()/100
             numjitters=self.option_numjitters1.get()
         except:
-            print("Wrong Selection")
-            return
+            self.comparison.configure(text="Wrong Selection")
+            return  
        
+        try:
 
-        self.image1,self.image2,time1,distance1=self.recognize(encoding_size,model_type,tolerance,numjitters,filelocation1,filelocation2,self.result1)
-        self.face1['image'],self.face2['image']=self.image1,self.image2
-        
+            self.image1,self.image2,time1,distance1=self.recognize(encoding_size,model_type,tolerance,numjitters,filelocation1,filelocation2,self.result1)
+            self.face1['image'],self.face2['image']=self.image1,self.image2
+        except:
+            self.comparison.configure(text='Failed')
+            return    
         
         try:
             filelocation1 = tkinter.filedialog.askopenfilename()
@@ -155,21 +164,28 @@ class App():
             tolerance=self.tolerance2.get()/100
             numjitters=self.option_numjitters2.get()
         except:
-            print("Wrong Selection")
-            return
+            self.comparison.configure(text="Wrong Selection")
+            return  
         try:
             self.image3,self.image4,time2,distance2=self.recognize(encoding_size,model_type,tolerance,numjitters,filelocation1,filelocation2,self.result2)
             self.face3['image'],self.face4['image']=self.image3,self.image4
         except:
-            print('Failed')
-            return
+            self.comparison.configure(text='Failed')
+            return    
         
         try:
-
             filelocation = tkinter.filedialog.askopenfilename()
-            result_knn=self.find_knn('train',filelocation)
+            neighbors=self.neighbors.get()
+            distance_threshold=self.distance_threshold.get()/100
         except:
-            print('Failed')
+            self.comparison.configure(text="Wrong Selection")
+            return 
+        try:
+            
+            result_knn=self.find_knn('train',filelocation,n_neighbors=neighbors,)
+        except:
+            
+            self.comparison.configure(text='Knn Failed')
             return            
         comptext=""
         if(abs(time1-time2)<0.01):comptext+=f"Both processes took about the same time ."

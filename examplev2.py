@@ -132,8 +132,9 @@ class App():
                 y.append(class_dir)
         knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')
         knn_clf.fit(X, y)
+        t_start=time.process_time()
         faces_encodings = face_recognition.face_encodings(face_recognition.load_image_file(img_predict_path))
-        if(knn_clf.kneighbors(faces_encodings, n_neighbors)[0][0][0] <= distance_threshold):return knn_clf.predict(faces_encodings)[0]
+        if(knn_clf.kneighbors(faces_encodings, n_neighbors)[0][0][0] <= distance_threshold):return knn_clf.predict(faces_encodings)[0],1000*(time.process_time()-t_start)  
         else:return 'Failed'
 
     def compare(self):
@@ -182,7 +183,7 @@ class App():
             return 
         try:
             
-            result_knn=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
+            result_knn,time3=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
         except:
             
             self.comparison.configure(text='Knn Failed')
@@ -195,11 +196,10 @@ class App():
         elif(distance2>distance1):comptext+=f"The first process found a smaller distance by {distance2[0]-distance1[0]} "
         else:comptext+=f"The second process  process found a smaller distance by {distance1[0]-distance2[0]}"
         if(result_knn=="Failed"):comptext+='Also K-neighbour failed.'
-        else:comptext+=f'.Also K-neighbour recognized the face as {result_knn}.'
+        else:comptext+=f'.\nAlso K-neighbour recognized the face as {result_knn} in {time3} ms.'
         self.comparison.configure(text=comptext)
 
          
 root = tkinter.Tk()
 App(root)
 root.mainloop()
-

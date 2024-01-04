@@ -1,7 +1,13 @@
-import face_recognition,tkinter,tkinter.filedialog,time,cv2,os,os.path
+import face_recognition,tkinter,tkinter.filedialog,time,cv2,os,os.path,PIL,tensorflow.keras.preprocessing
 from sklearn import neighbors
 from face_recognition.face_recognition_cli import image_files_in_folder
 from PIL import Image,ImageTk
+import matplotlib.pyplot as plt
+os.environ['TF_ENABLE_ONEDNN_OPTS']='0'
+import tensorflow as tf
+import numpy as np
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.vgg16 import preprocess_input
 class App():
     def __init__(self, root):
         self.root=root
@@ -25,7 +31,7 @@ class App():
         self.distance_threshold = tkinter.Scale(self.frame,from_=1, to=100, tickinterval=5, orient="horizontal")
         self.distance_threshold.grid(row=12,column=0)
 
-        self.neighbors = tkinter.Scale(self.frame,from_=1, to=4, tickinterval=5,orient="horizontal")
+        self.neighbors = tkinter.Scale(self.frame,from_=1, to=10, tickinterval=5,orient="horizontal")
         self.neighbors.grid(row=12,column=2)
 
         self.comparison=tkinter.Label(self.frame,text="")
@@ -134,8 +140,34 @@ class App():
         knn_clf.fit(X, y)
         t_start=time.process_time()
         faces_encodings = face_recognition.face_encodings(face_recognition.load_image_file(img_predict_path))
-        if(knn_clf.kneighbors(faces_encodings, n_neighbors)[0][0][0] <= distance_threshold):return knn_clf.predict(faces_encodings)[0],1000*(time.process_time()-t_start)  
-        else:return 'Failed'
+        train_ds = tf.keras.utils.image_dataset_from_directory('C:/Users/argra/Desktop/repos/Project-12/train',validation_split=0.4,subset="training",seed=123,image_size=(200, 200), batch_size=2)
+        val_ds = tf.keras.utils.image_dataset_from_directory('C:/Users/argra/Desktop/repos/Project-12/train', validation_split=0.4,subset="validation",seed=123,image_size=(200, 200), batch_size=2)
+        class_names=train_ds.class_names
+
+        train_ds = train_ds.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
+        val_ds = val_ds.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
+        image_batch, labels_batch = next(iter(train_ds.map(lambda x, y: (tf.keras.layers.Rescaling(1./255)(x), y))))
+        model = tf.keras.Sequential([tf.keras.layers.Rescaling(1./255),tf.keras.layers.Conv2D(32, 3, activation='relu'),tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),tf.keras.layers.MaxPooling2D(),tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),tf.keras.layers.Flatten(),tf.keras.layers.Dense(128, activation='relu'),tf.keras.layers.Dense(3)
+        ])
+        model.compile(optimizer='adam',loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
+        model.fit(train_ds,validation_data=val_ds,epochs=8)
+        probability_model = tf.keras.Sequential([model,tf.keras.layers.Softmax()])
+
+
+        img_path = '1704312584184.jpg'
+        img = tensorflow.keras.preprocessing.image.load_img(img_path, target_size=(200, 200))
+
+        img = tensorflow.keras.preprocessing.image.img_to_array(img)
+
+        img = preprocess_input(img, data_format=None)
+        img = img/255
+        img = np.expand_dims(img, axis=0)
+        
+        result=class_names[np.argmax(probability_model.predict(img)[0])]
+        if(knn_clf.kneighbors(faces_encodings, n_neighbors)[0][0][0] <= distance_threshold):return knn_clf.predict(faces_encodings)[0],result
+        else:return 'Failed',result
 
     def compare(self):
         try:
@@ -181,13 +213,14 @@ class App():
         except:
             self.comparison.configure(text="Wrong Selection")
             return 
+        
         try:
-            
-            result_knn,time3=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
+            result_knn,result_model=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
         except:
-            
-            self.comparison.configure(text='Knn Failed')
-            return            
+            self.comparison.configure(text='Failed')
+            return  
+        
+                    
         comptext=""
         if(abs(time1-time2)<0.01):comptext+=f"Both processes took about the same time ."
         elif(time1>time2):comptext+=f"The second process was faster by {time1-time2} ms ."
@@ -196,7 +229,7 @@ class App():
         elif(distance2>distance1):comptext+=f"The first process found a smaller distance by {distance2[0]-distance1[0]} "
         else:comptext+=f"The second process  process found a smaller distance by {distance1[0]-distance2[0]}"
         if(result_knn=="Failed"):comptext+='Also K-neighbour failed.'
-        else:comptext+=f'.\nAlso K-neighbour recognized the face as {result_knn} in {time3} ms.'
+        else:comptext+=f'.\nAlso K-neighbour recognized the face as {result_knn} and our model recognized the face as {result_model}.'
         self.comparison.configure(text=comptext)
 
          

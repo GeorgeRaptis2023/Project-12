@@ -127,7 +127,7 @@ class App():
             pil_image2=pil_image2.resize((75,75))    
             return ImageTk.PhotoImage(pil_image),ImageTk.PhotoImage(pil_image2),t_process_ms,distance
     
-    def find_knn(self,train_dir ,img_predict_path,distance_threshold=0.6 ,n_neighbors=1, knn_algo='ball_tree'):
+    def find(self,train_dir ,img_predict_path,distance_threshold=0.6 ,n_neighbors=1, knn_algo='ball_tree'):
         X,y = [],[]
         for class_dir in os.listdir(train_dir):
             folderlocation=os.path.join(train_dir, class_dir)
@@ -156,8 +156,8 @@ class App():
         probability_model = tf.keras.Sequential([model,tf.keras.layers.Softmax()])
 
 
-        img_path = '1704312584184.jpg'
-        img = tensorflow.keras.preprocessing.image.load_img(img_path, target_size=(200, 200))
+        
+        img = tensorflow.keras.preprocessing.image.load_img(img_predict_path, target_size=(200, 200))
 
         img = tensorflow.keras.preprocessing.image.img_to_array(img)
 
@@ -215,7 +215,7 @@ class App():
             return 
         
         try:
-            result_knn,result_model=self.find_knn('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
+            result_knn,result_model=self.find('train',filelocation,n_neighbors=neighbors,distance_threshold=distance_threshold)
         except:
             self.comparison.configure(text='Failed')
             return  

@@ -1,5 +1,5 @@
 # Project-12
-To run FaceRecognition.py the modules cv2,face-recognition,sklearn,tensorflow must be installed following the official instructions 
+To run FaceRecognition.py the libraries cv2,face-recognition,sklearn,tensorflow must be installed following the official instructions 
 for [sklearn](https://scikit-learn.org/stable/install.html),
 for [face-recognition]( https://pypi.org/project/face-recognition/),
 for [cv2](https://pypi.org/project/opencv-python/).

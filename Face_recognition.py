@@ -152,7 +152,7 @@ class App():
                 y.append(class_dir)
         knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')
         knn_clf.fit(X, y)
-        t_start=time.process_time()
+        
         faces_encodings = face_recognition.face_encodings(face_recognition.load_image_file(img_predict_path))
         train_ds = tf.keras.utils.image_dataset_from_directory('C:/Users/argra/Desktop/repos/Project-12/train',validation_split=0.4,subset="training",seed=123,image_size=(200, 200), batch_size=2)
         val_ds = tf.keras.utils.image_dataset_from_directory('C:/Users/argra/Desktop/repos/Project-12/train', validation_split=0.4,subset="validation",seed=123,image_size=(200, 200), batch_size=2)
